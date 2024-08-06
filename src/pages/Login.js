@@ -1,4 +1,3 @@
-
 import axios from "axios";
 import { useContext, useState } from "react";
 import { FaUser } from "react-icons/fa";
@@ -14,6 +13,8 @@ export default function Login() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+
+  const { setUser } = useContext(UserContext);
 
   const navigate = useNavigate();
 
@@ -38,8 +39,8 @@ export default function Login() {
         localStorage.setItem("token", response.data.token);
         toast.success("Login successful!");
         // Assuming the user data is returned in the response
-        // const user = response.data.user;
-        // setUser(user);
+        const user = response.data.user;
+        setUser(user);
         // setIsLoading(false); // Set isLoading to false after the API call is completed
         window.location.href = "/";
       })
@@ -72,11 +73,8 @@ export default function Login() {
           flex items-center justify-center my-4"
         >
           <div className="w-full h-fit">
-            <img
-              src={Logo}
-              alt="filmcrate logo"
-              className="relative -left-4"
-            ></img>
+            <h1 className="text-5xl font-bold font-serif">FilmCrate</h1>
+
             <h1 className="text-4xl md:text-4xl font-bold leading-tight mt-10 mb-2 texts">
               LOGIN
             </h1>

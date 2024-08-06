@@ -7,24 +7,21 @@ import {
   BiSolidDashboard,
 } from "react-icons/bi";
 
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import Logo from "../../assets/images/filmcratebg.png";
 import { UserContext } from "../../context/UserContext";
 
-export default function Sidebar({
-  isOpen,
-  toggleSidebar,
-  activeTab,
-  onTabChange,
-}) {
+export default function Sidebar({ isOpen, toggleSidebar }) {
   const [userProfile, setUserProfile] = useState({});
   const { user } = useContext(UserContext);
+  const [activeTab, setActiveTab] = useState("");
 
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     axios
-      .get("https://localhost:3001/users", {
+      .get("http://localhost:3001/users", {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
@@ -36,6 +33,18 @@ export default function Sidebar({
         console.log(error);
       });
   }, []);
+
+  useEffect(() => {
+    const pathToTab = {
+      "/dashboard": "dashboard",
+      "/movies": "movies",
+      "/search": "search",
+      "/watchlist": "watchlist",
+      "/profile": "profile",
+    };
+
+    setActiveTab(pathToTab[location.pathname] || "");
+  }, [location.pathname]);
 
   return (
     <div className="relative">
@@ -103,7 +112,7 @@ export default function Sidebar({
                 className={`cursor-pointer w-full flex gap-4 justify-start items-center px-4 py-3 text-[#305973] transition duration-400 hover:bg-[#305973] hover:text-white rounded-xl ${
                   activeTab === "dashboard" ? "bg-[#305973] text-white" : ""
                 }`}
-                onClick={() => onTabChange("dashboard")}
+                onClick={() => navigate("/dashboard")}
               >
                 <BiSolidDashboard className="w-8 h-8" />
                 <p>Dashboard</p>
@@ -114,7 +123,7 @@ export default function Sidebar({
               className={`cursor-pointer w-full flex gap-4 justify-start items-center px-4 py-3 text-[#305973] transition duration-400 hover:bg-[#305973] hover:text-white rounded-xl ${
                 activeTab === "movies" ? "bg-[#305973] text-white" : ""
               }`}
-              onClick={() => onTabChange("movies")}
+              onClick={() => navigate("/movies")}
             >
               <BiCameraMovie className="w-8 h-8" />
               <p>Movies</p>
@@ -124,7 +133,7 @@ export default function Sidebar({
               className={`cursor-pointer w-full flex gap-4 justify-start items-center px-4 py-3 text-[#305973] transition duration-400 hover:bg-[#305973] hover:text-white rounded-xl ${
                 activeTab === "search" ? "bg-[#305973] text-white" : ""
               }`}
-              onClick={() => onTabChange("search")}
+              onClick={() => navigate("/search")}
             >
               <BiSearchAlt className="w-8 h-8" />
               <p>Search</p>
@@ -135,7 +144,7 @@ export default function Sidebar({
                 className={`cursor-pointer w-full flex gap-4 justify-start items-center px-4 py-3 text-[#305973] transition duration-400 hover:bg-[#305973] hover:text-white rounded-xl ${
                   activeTab === "watchlist" ? "bg-[#305973] text-white" : ""
                 }`}
-                onClick={() => onTabChange("watchlist")}
+                onClick={() => navigate("/watchlist")}
               >
                 <BiBookmark className="w-8 h-8" />
                 <p>Watchlist</p>
@@ -148,9 +157,7 @@ export default function Sidebar({
           className="cursor-pointer absolute bottom-5 px-3 flex items-center gap-3 profilefonts text-[#305973]"
           onClick={() => {
             if (user) {
-              onTabChange("profile");
-            } else {
-              navigate("/please-login");
+              navigate("/profile");
             }
           }}
         >
@@ -158,7 +165,7 @@ export default function Sidebar({
             src={
               userProfile?.user?.[0]?.image == null
                 ? "https://img.freepik.com/free-icon/user_318-159711.jpg"
-                : `https://localhost:3001/uploads/${userProfile?.user?.[0]?.image}`
+                : `http://localhost:3001/uploads/${userProfile?.user?.[0]?.image}`
             }
             alt=""
             className="w-[50px] h-[50px] rounded-full object-cover"
