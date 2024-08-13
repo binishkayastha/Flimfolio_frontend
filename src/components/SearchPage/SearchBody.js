@@ -5,10 +5,10 @@ import { useNavigate } from "react-router-dom";
 import Search from "../../assets/images/search.gif";
 import { UserContext } from "../../context/UserContext";
 
-export const SearchBody = ({setActiveTab, setMovie}) => {
+export const SearchBody = ({ setActiveTab, setMovie }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
-  const {user} = useContext(UserContext)
+  const { user } = useContext(UserContext);
 
   const navigate = useNavigate();
 
@@ -59,9 +59,9 @@ export const SearchBody = ({setActiveTab, setMovie}) => {
                   onClick={() => {
                     if (user) {
                       setActiveTab("movie details");
-                    setMovie(result);
+                      setMovie(result);
                     } else {
-                      navigate("/please-login");
+                      navigate("/login");
                     }
                   }}
                 >
@@ -76,9 +76,7 @@ export const SearchBody = ({setActiveTab, setMovie}) => {
                       className="max-w-[60px] max-h-[80px] rounded-xl object-cover"
                     />
                   </div>
-                  <div className="text-sm sm:text-lg">
-                  {result.title}
-                  </div>
+                  <div className="text-sm sm:text-lg">{result.title}</div>
                 </div>
               ))
             )}

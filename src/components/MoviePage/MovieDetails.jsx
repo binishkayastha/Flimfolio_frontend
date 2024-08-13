@@ -8,7 +8,6 @@ import ReviewBody from "./ReviewBody";
 
 export const MovieDetails = ({ setActiveTab, setMovie }) => {
   const { movieId } = useParams();
-  console.log(movieId);
   const [showAllCast, setShowAllCast] = useState(false);
   const maxToShow = 8;
 
@@ -16,11 +15,13 @@ export const MovieDetails = ({ setActiveTab, setMovie }) => {
 
   const [movieDetails, setMovieDetails] = useState({});
   const [isWatchlisted, setIsWatchlisted] = useState(false); // New state to track watchlist status
+  const [loading, setLoading] = useState(true); // New state to track loading
   const { user } = useContext(UserContext);
 
-  console.log(user?.user[0]?.userType);
+  console.log(movieDetails);
 
   useEffect(() => {
+    setLoading(true);
     axios
       .get(`http://localhost:3001/movies/${movieId}`, {
         headers: {
@@ -29,14 +30,14 @@ export const MovieDetails = ({ setActiveTab, setMovie }) => {
       })
       .then((response) => {
         setMovieDetails(response.data);
-        setIsWatchlisted(response.data.isWatchListed); // Set watchlist status from response
+        setIsWatchlisted(response.data.data[0].isWatchListed); // Set watchlist status from response
+        setLoading(false); // Data has been loaded, so stop loading
       })
       .catch((error) => {
         console.log(error);
+        setLoading(false); // Stop loading even if there's an error
       });
   }, [movieId, isWatchlisted]);
-
-  console.log(movieDetails);
 
   // Function to handle adding/removing from watchlist
   const handleWatchlistToggle = async () => {
@@ -48,7 +49,7 @@ export const MovieDetails = ({ setActiveTab, setMovie }) => {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
         });
-        console.log("removed from watchlist");
+        setIsWatchlisted(false);
       } else {
         // Add to watchlist
         await axios.post(
@@ -60,16 +61,14 @@ export const MovieDetails = ({ setActiveTab, setMovie }) => {
             },
           }
         );
-        console.log("added to watchlist");
+        setIsWatchlisted(true);
       }
-      setIsWatchlisted((prev) => !prev); // Toggle the watchlist status
     } catch (error) {
       console.log(error);
     }
   };
 
   const handleLikeUnlike = async (reviewID, isLiked) => {
-    console.log(reviewID);
     try {
       const url = isLiked
         ? `http://localhost:3001/movies/${movieId}/reviews/${reviewID}/unlike`
@@ -85,7 +84,6 @@ export const MovieDetails = ({ setActiveTab, setMovie }) => {
         }
       );
 
-      // Update the movieDetails state with the updated like count and isLiked status
       setMovieDetails((prevMovieDetails) => {
         const updatedReviews = prevMovieDetails.data[0].topReviews.map(
           (review) => {
@@ -110,25 +108,20 @@ export const MovieDetails = ({ setActiveTab, setMovie }) => {
           ],
         };
       });
-
-      console.log("liked");
     } catch (error) {
       console.log(error);
     }
   };
 
   const handleUpdateReview = (reviewID) => {
-    // Implement navigation to the WriteReviewPage with reviewID as a parameter
-    // You can use the "navigate" function from react-router-dom for this
     navigate("/updateReview", {
       state: {
         movieDetails: movieDetails.data?.[0],
-        reviewID: reviewID, // Pass the reviewID to the WriteReviewPage
+        reviewID: reviewID,
       },
     });
   };
 
-  // Function to delete a review
   const handleDeleteReview = async (reviewID) => {
     try {
       await axios.delete(
@@ -140,7 +133,6 @@ export const MovieDetails = ({ setActiveTab, setMovie }) => {
         }
       );
 
-      // Update the movieDetails state to remove the deleted review
       setMovieDetails((prevMovieDetails) => {
         const updatedReviews = prevMovieDetails.data[0].topReviews.filter(
           (review) => review._id !== reviewID
@@ -156,12 +148,18 @@ export const MovieDetails = ({ setActiveTab, setMovie }) => {
           ],
         };
       });
-
-      console.log("Review deleted successfully");
     } catch (error) {
       console.log(error);
     }
   };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center w-full h-screen">
+        <div className="loader ease-linear rounded-full border-t-8 border-[#305973] h-32 w-32 animate-spin"></div>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -197,27 +195,19 @@ export const MovieDetails = ({ setActiveTab, setMovie }) => {
                 {movieDetails.data?.[0]?.movie.release_date}
               </span>
             </div>
-            {user?.user[0]?.userType !== "admin" && (
-              <div>
-                {isWatchlisted ? (
-                  <FaBookmark
-                    className="cursor-pointer w-5 h-5 sm:w-6 sm:h-6"
-                    onClick={handleWatchlistToggle}
-                  />
-                ) : (
-                  <FaRegBookmark
-                    className="cursor-pointer w-5 h-5 sm:w-6 sm:h-6"
-                    onClick={handleWatchlistToggle}
-                  />
-                )}
-                {/* {movieDetails.data?.[0]?.isWatchlisted ? (
-                <FaBookmark className="cursor-pointer w-5 h-5 sm:w-6 sm:h-6" onClick={handleWatchlistToggle}/>
+            <div>
+              {isWatchlisted ? (
+                <FaBookmark
+                  className="cursor-pointer w-5 h-5 sm:w-6 sm:h-6"
+                  onClick={handleWatchlistToggle}
+                />
               ) : (
-                <FaRegBookmark className="cursor-pointer w-5 h-5 sm:w-6 sm:h-6" onClick={handleWatchlistToggle}/>
-              )} */}
-                {/* <BiBookmark className="w-5 h-6 sm:w-6 sm:h-8" /> */}
-              </div>
-            )}
+                <FaRegBookmark
+                  className="cursor-pointer w-5 h-5 sm:w-6 sm:h-6"
+                  onClick={handleWatchlistToggle}
+                />
+              )}
+            </div>
           </div>
           <div>
             <p className="text-justify text-[12px] sm:text-[14px] md:text-base">
@@ -229,7 +219,7 @@ export const MovieDetails = ({ setActiveTab, setMovie }) => {
 
       <div className="flex flex-col moviefonts ml-[16px] sm:ml-[60px] md:ml-[76px] gap-3">
         <h1 className="text-base sm:text-lg md:text-2xl font-semibold">Cast</h1>
-        <div className="mx-4 sm:mx-8 md:mx-11 flex flex-row flex-wrap gap-1">
+        <div className="flex flex-row flex-wrap gap-2">
           {showAllCast
             ? movieDetails.data?.[0]?.cast.map((cast) => (
                 <CastBody key={cast.id} name={cast.name} />
@@ -303,11 +293,13 @@ export const MovieDetails = ({ setActiveTab, setMovie }) => {
         <div className="flex flex-wrap items-center justify-center gap-5 md:justify-start px-3">
           {movieDetails.data?.[0]?.similarMovies.slice(0, 6).map((movie) => (
             <div
-              className="cursor-pointer rounded-md bg-blue-600 w-28 sm:h-40 sm:w-40 raila"
+              className="cursor-pointer rounded-md bg-gray-400 w-28 sm:h-40 sm:w-40 raila"
               onClick={() => {
-                setActiveTab("movie details");
-                setMovie(movie);
+                // setActiveTab("movie details");
+                // setMovie(movie);
+                navigate(`/movie/${movie.id}`);
               }}
+              key={movie.id}
             >
               <img
                 src={

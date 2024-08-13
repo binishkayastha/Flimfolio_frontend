@@ -13,6 +13,8 @@ import { Pagination, Navigation } from "swiper/modules";
 import { UserContext } from "../../context/UserContext";
 import { TrendingMovie } from "./TrendingMovie";
 import "./trendingStyles.css";
+import { isLoggedInAtom } from "../../atoms/atoms";
+import { useAtom } from "jotai";
 
 const TrendingMoviesBody = ({
   setActiveTab,
@@ -21,7 +23,8 @@ const TrendingMoviesBody = ({
   movieDetails,
   setMovieDetails,
 }) => {
-  const { user } = useContext(UserContext);
+  // const { user } = useContext(UserContext);
+  const [isLoggedIn] = useAtom(isLoggedInAtom);
   const [trendingMovies, setTrendingMovies] = useState([]);
 
   const navigate = useNavigate();
@@ -65,11 +68,11 @@ const TrendingMoviesBody = ({
                 movieDetails={movieDetails}
                 setMovieDetails={setMovieDetails}
                 onClick={() => {
-                  if (user) {
+                  if (isLoggedIn) {
                     navigate(`/movie/${movieData.id}`);
                     setMovie(movieData);
                   } else {
-                    navigate("/please-login");
+                    navigate("/login");
                   }
                 }}
               />

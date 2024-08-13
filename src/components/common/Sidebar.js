@@ -172,7 +172,7 @@ export default function Sidebar({ isOpen, toggleSidebar }) {
           />
 
           <div>
-            {userProfile?.user ? (
+            {userProfile?.user && (
               <>
                 <h1 className="font-semibold">
                   {userProfile?.user?.[0]?.username}
@@ -181,8 +181,6 @@ export default function Sidebar({ isOpen, toggleSidebar }) {
                   {userProfile?.user?.[0]?.email}
                 </p>
               </>
-            ) : (
-              <h1 className="font-semibold">Guest User</h1>
             )}
           </div>
         </div>

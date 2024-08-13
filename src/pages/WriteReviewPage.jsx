@@ -54,6 +54,7 @@ const WriteReviewPage = () => {
       setRating(0);
       setReviewText("");
       setSubmitted(true);
+      
     } catch (error) {
       console.log(error);
     }

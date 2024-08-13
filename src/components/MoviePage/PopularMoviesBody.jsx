@@ -8,13 +8,15 @@ import { Navigation, Pagination } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { UserContext } from "../../context/UserContext";
 import "./otherStyles.css";
+import { isLoggedInAtom } from "../../atoms/atoms";
+import { useAtom } from "jotai";
 
 export const PopularMoviesBody = ({ setActiveTab, setMovieId, setMovie }) => {
   const [slidesPerView, setSlidesPerView] = useState(6);
   const [hoveredSlide, setHoveredSlide] = useState(null);
 
   const [popularMovies, setPopularMovies] = useState([]);
-  const { user } = useContext(UserContext);
+  const [isLoggedIn] = useAtom(isLoggedInAtom);
 
   // const handleMovieDetailsClick = ({}) => {
   //   setMovieId(popularMovies[hoveredSlide].id);
@@ -82,11 +84,11 @@ export const PopularMoviesBody = ({ setActiveTab, setMovieId, setMovie }) => {
               onMouseEnter={() => handleSlideMouseEnter(index)}
               onMouseLeave={handleSlideMouseLeave}
               onClick={() => {
-                if (user) {
+                if (isLoggedIn) {
                   navigate(`/movie/${popularMovie.id}`);
                   setMovie(popularMovie);
                 } else {
-                  navigate("/please-login");
+                  navigate("/login");
                 }
               }}
             >

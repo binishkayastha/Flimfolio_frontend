@@ -8,6 +8,8 @@ export default function AllReviews() {
   const movieDetails = location.state?.movieDetails;
   const [reviews, setReviews] = useState([]);
 
+  console.log(reviews);
+
   useEffect(() => {
     axios
       .get(`http://localhost:3001/movies/${movieDetails.id}/reviews`, {

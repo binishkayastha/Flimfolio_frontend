@@ -1,14 +1,18 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 
-export const MovieLists = ({setActiveTab, movie, setMovie}) => {
-  console.log(movie);
+export const MovieLists = ({ setActiveTab, movie, setMovie }) => {
+  const navigate = useNavigate();
+
   return (
-    <div className="flex flex-col gap-2 cursor-pointer" onClick={
-      () => {
-        setActiveTab("movie details");
-        setMovie(movie.movieDetails);
-      }
-    }>
+    <div
+      className="flex flex-col gap-2 cursor-pointer"
+      onClick={() => {
+        // setActiveTab("movie details");
+        // setMovie(movie.movieDetails);
+        navigate(`/movie/${movie.movieId}`);
+      }}
+    >
       <div className="bg-gray-300 h-[25vh] md:h-[25vh] min-w-[10vw] object-cover rounded-lg ">
         <img
           src={`https://image.tmdb.org/t/p/w500/${movie.movieDetails.poster_path}`}
