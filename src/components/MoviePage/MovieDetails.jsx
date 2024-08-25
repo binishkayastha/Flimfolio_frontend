@@ -5,11 +5,14 @@ import { useNavigate, useParams } from "react-router-dom";
 import { UserContext } from "../../context/UserContext";
 import { CastBody } from "./CastBody";
 import ReviewBody from "./ReviewBody";
+import { useAtom } from "jotai";
+import { isLoggedInAtom } from "../../atoms/atoms";
 
 export const MovieDetails = ({ setActiveTab, setMovie }) => {
   const { movieId } = useParams();
   const [showAllCast, setShowAllCast] = useState(false);
   const maxToShow = 8;
+  const [isUserLoggedIn, setIsUserLoggedIn] = useAtom(isLoggedInAtom);
 
   const navigate = useNavigate();
 
@@ -17,8 +20,6 @@ export const MovieDetails = ({ setActiveTab, setMovie }) => {
   const [isWatchlisted, setIsWatchlisted] = useState(false); // New state to track watchlist status
   const [loading, setLoading] = useState(true); // New state to track loading
   const { user } = useContext(UserContext);
-
-  console.log(movieDetails);
 
   useEffect(() => {
     setLoading(true);
@@ -110,6 +111,90 @@ export const MovieDetails = ({ setActiveTab, setMovie }) => {
       });
     } catch (error) {
       console.log(error);
+    }
+  };
+
+  const handleReaction = async (reviewID, userId, reactionType) => {
+    if (!user.user || !user.user[0]._id) {
+      console.error("User is not authenticated or user ID is missing");
+      return;
+    }
+
+    try {
+      const review = movieDetails.data[0].topReviews.find(
+        (review) => review._id === reviewID
+      );
+
+      if (!review) {
+        return;
+      }
+
+      const userReactionExists = review.reactions[reactionType]?.includes(
+        user.user[0]._id
+      );
+
+      let url;
+      let method;
+
+      if (userReactionExists) {
+        url = `http://localhost:3001/movies/${movieId}/reviews/${reviewID}/reactions`;
+        method = "DELETE";
+      } else {
+        url = `http://localhost:3001/movies/${movieId}/reviews/${reviewID}/reactions`;
+        method = "POST";
+      }
+
+      await axios({
+        method: method,
+        url: url,
+        data: { reactionType: reactionType },
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+
+      setMovieDetails((prevMovieDetails) => {
+        const updatedReviews = prevMovieDetails.data[0].topReviews.map(
+          (review) => {
+            if (review._id === reviewID) {
+              const updatedReactions = { ...review.reactions };
+
+              if (userReactionExists) {
+                updatedReactions[reactionType] = updatedReactions[
+                  reactionType
+                ].filter((userID) => userID !== user.user[0]._id);
+
+                if (updatedReactions[reactionType].length === 0) {
+                  delete updatedReactions[reactionType];
+                }
+              } else {
+                if (!updatedReactions[reactionType]) {
+                  updatedReactions[reactionType] = [];
+                }
+                updatedReactions[reactionType].push(user.user[0]._id);
+              }
+
+              return {
+                ...review,
+                reactions: updatedReactions,
+              };
+            }
+            return review;
+          }
+        );
+
+        return {
+          ...prevMovieDetails,
+          data: [
+            {
+              ...prevMovieDetails.data[0],
+              topReviews: updatedReviews,
+            },
+          ],
+        };
+      });
+    } catch (error) {
+      console.error("Error handling reaction:", error);
     }
   };
 
@@ -257,11 +342,15 @@ export const MovieDetails = ({ setActiveTab, setMovie }) => {
               key={review.id}
               user={review.user}
               review={review.review}
+              reviewDetails={review}
               rating={review.rating}
               likes={review.likes}
               isLiked={review.isLiked}
               isUserLoggedIn={review.isUserLoggedIn}
               onLikeUnlike={() => handleLikeUnlike(review._id, review.isLiked)}
+              onReaction={(reaction) =>
+                handleReaction(review._id, user.user[0]._id, reaction)
+              }
               onUpdateReview={() => handleUpdateReview(review._id)}
               onDeleteReview={() => handleDeleteReview(review._id)}
             />

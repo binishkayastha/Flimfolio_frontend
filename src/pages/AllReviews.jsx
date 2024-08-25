@@ -1,14 +1,15 @@
 import axios from "axios";
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import ReviewBody from "../components/MoviePage/ReviewBody";
+import { UserContext } from "../context/UserContext";
 
 export default function AllReviews() {
   const location = useLocation();
   const movieDetails = location.state?.movieDetails;
   const [reviews, setReviews] = useState([]);
 
-  console.log(reviews);
+  const { user } = useContext(UserContext);
 
   useEffect(() => {
     axios
@@ -57,6 +58,63 @@ export default function AllReviews() {
     }
   };
 
+  const handleReaction = async (reviewID, reactionType) => {
+    console.log(reactionType);
+
+    if (!user.user || !user.user[0]._id) {
+      console.error("User is not authenticated or user ID is missing");
+      return;
+    }
+
+    try {
+      const review = reviews.data.find((review) => review._id === reviewID);
+
+      if (!review) {
+        console.error("Review not found");
+        return;
+      }
+
+      const userReactionExists = review.reactions[reactionType]?.includes(
+        user.user[0]._id
+      );
+
+      let url;
+      let method;
+
+      if (userReactionExists) {
+        // Remove reaction
+        url = `http://localhost:3001/movies/${movieDetails.id}/reviews/${reviewID}/reactions`;
+        method = "DELETE";
+      } else {
+        // Add reaction
+        url = `http://localhost:3001/movies/${movieDetails.id}/reviews/${reviewID}/reactions`;
+        method = "POST";
+      }
+
+      await axios({
+        method: method,
+        url: url,
+        data: { reactionType: reactionType },
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+
+      // Fetch the updated reviews and set them in the component state
+      const updatedReviewsResponse = await axios.get(
+        `http://localhost:3001/movies/${movieDetails.id}/reviews`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
+      setReviews(updatedReviewsResponse.data);
+    } catch (error) {
+      console.error("Error handling reaction:", error);
+    }
+  };
+
   return (
     <div className="flex flex-col gap-4 px-10 py-8">
       <div className="flex items-center mb-3">
@@ -94,15 +152,18 @@ export default function AllReviews() {
       ) : (
         reviews.data?.map((review) => (
           <ReviewBody
-            key={review._id}
+            key={review.id}
             user={review.user}
             review={review.review}
+            reviewDetails={review}
             rating={review.rating}
             likes={review.likes}
             isLiked={review.isLiked}
-            onLikeUnlike={() =>
-              handleLikeUnlikeReview(review._id, review.isLiked)
-            }
+            isUserLoggedIn={review.isUserLoggedIn}
+            onLikeUnlike={() => handleLikeUnlike(review._id, review.isLiked)}
+            onReaction={(reaction) => handleReaction(review._id, reaction)}
+            onUpdateReview={() => handleUpdateReview(review._id)}
+            onDeleteReview={() => handleDeleteReview(review._id)}
           />
         ))
       )}

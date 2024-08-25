@@ -1,5 +1,6 @@
 import axios from "axios";
 import React, { useState } from "react";
+import toast, { Toaster } from "react-hot-toast";
 import { useLocation } from "react-router-dom";
 
 const AddReviewPage = () => {
@@ -39,6 +40,10 @@ const AddReviewPage = () => {
       setRating(0);
       setReviewText("");
       setSubmitted(true);
+
+      toast.success("Review submitted successfully");
+
+      window.location.href = "/movie/" + movieDetails.id;
     } catch (error) {
       console.log(error);
     }
@@ -46,6 +51,8 @@ const AddReviewPage = () => {
 
   return (
     <div className="relative h-screen ">
+      <Toaster />
+
       <div className="absolute top-3 left-3">
         <button
           className="bg-white p-3 rounded-full shadow-md"
@@ -113,11 +120,6 @@ const AddReviewPage = () => {
               onChange={handleReviewChange}
             ></textarea>
           </div>
-          {submitted ? (
-            <p className="text-green-500 font-semibold mb-4">
-              Review submitted successfully!
-            </p>
-          ) : null}
         </div>
       </div>
       <div className="fixed bottom-3 right-3">
